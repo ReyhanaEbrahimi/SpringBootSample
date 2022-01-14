@@ -1,16 +1,24 @@
 package ir.arcademy.blog.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+
+import javax.sql.DataSource;
 
 @Configuration
 public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
-
+ @Autowired
+ private DataSource dataSource;
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.jdbcAuthentication();
+        auth.jdbcAuthentication().dataSource(dataSource).
+                passwordEncoder(NoOpPasswordEncoder.getInstance()).
+                usersByUsernameQuery("select email,password,enabled from users_tbl where email=?").
+                authoritiesByUsernameQuery("select email,roles from authorities where email=?");
     }
 
     @Override
@@ -23,4 +31,5 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and().formLogin()
                 .loginPage("/login").permitAll().and().logout().permitAll();
     }
+
 }
